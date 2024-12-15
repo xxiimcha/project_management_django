@@ -115,7 +115,7 @@
                                 <td>{{ member.tasks_delayed }}</td>
                                 <td>
                                     <div class="progress">
-                                        <div class="progress-bar bg-success progress-bar-custom" style="width: {{ member.tasks_completed|divisibleby:100 }}%;">
+                                        <div class="progress-bar bg-success progress-bar-custom">
                                             {{ member.tasks_completed|divisibleby:100 }}%
                                         </div>
                                     </div>
@@ -141,7 +141,7 @@
                         <div class="mb-2">
                             <span><strong>{{ task.project.name }} - {{ task.title }}</strong></span>
                             <div class="gantt-bar mb-2" 
-                                 style="width: {{ task.progress }}%; background-color: {{ color }};">
+                                 >
                                 {{ task.due_date }}
                             </div>
                         </div>

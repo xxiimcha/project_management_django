@@ -2,13 +2,33 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User  # Import User model
 from django.contrib import messages
-from .models import TeamMember, Task
+from .models import TeamMember, Task, UserProfile
 from .project_crud import get_projects, create_project
 from .forms import RegisterForm
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.forms import PasswordChangeForm
 from django.db.models import Count, Q, F
+from django.contrib.auth.views import LoginView
+from django.urls import reverse_lazy
 
+class CustomLoginView(LoginView):
+    template_name = 'app/login.html'
+
+    def form_valid(self, form):
+        # Call the parent method to log the user in
+        response = super().form_valid(form)
+        
+        # Fetch the user's role
+        user = self.request.user
+        if hasattr(user, 'userprofile'):
+            role = user.userprofile.role
+            self.request.session['user_role'] = role  # Store the role in session
+            messages.success(self.request, f"Welcome back, {user.username}! Role: {role}")
+            return reverse_lazy('dashboard')  # Redirect to 'dashboard' URL name
+        else:
+            messages.warning(self.request, "Your role is not set. Please contact an admin.")
+        
+        return response  # Redirect to the default next page or success_url
 # Dashboard View
 @login_required
 def dashboard(request):
@@ -154,8 +174,13 @@ def register(request):
     if request.method == 'POST':
         form = RegisterForm(request.POST)
         if form.is_valid():
-            form.save()
-            messages.success(request, "Registration successful. Please log in.")
+            # Save the user instance
+            user = form.save()
+
+            # Assign the 'project_manager' role automatically
+            UserProfile.objects.create(user=user, role='project_manager')
+
+            messages.success(request, "Registration successful. You have been assigned as a Project Manager. Please log in.")
             return redirect('login')
         else:
             messages.error(request, "There was an error during registration. Please check the form.")
