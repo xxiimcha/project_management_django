@@ -115,45 +115,87 @@
                                 <td>{{ member.tasks_delayed }}</td>
                                 <td>
                                     <div class="progress">
-                                        <div class="progress-bar bg-success progress-bar-custom">
-                                            {{ member.tasks_completed|divisibleby:100 }}%
+                                        <div class="progress-bar bg-success progress-bar-custom" 
+                                            >
+                                            {{ member.tasks_completed|default:0 }}%
                                         </div>
                                     </div>
+                                                                    
                                 </td>
                             </tr>
                             {% endfor %}
                         </tbody>
                         
+                        
                     </table>
                 </div>
 
-                <!-- Project Timeline -->
-                <div class="chart-container">
-                    <h5 class="fw-bold mb-3">Project Timeline</h5>
-                    {% for task in project_tasks %}
-                        {% if task.priority == 'high' %}
-                            {% assign color = '#dc3545' %}
-                        {% elif task.priority == 'medium' %}
-                            {% assign color = '#ffc107' %}
-                        {% else %}
-                            {% assign color = '#28a745' %}
-                        {% endif %}
-                        <div class="mb-2">
-                            <span><strong>{{ task.project.name }} - {{ task.title }}</strong></span>
-                            <div class="gantt-bar mb-2" 
-                                 >
-                                {{ task.due_date }}
+                <!-- Project Timeline Section -->
+                <div class="chart-container mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold">Project Timeline</h5>
+                        <!-- Project Timeline Button -->
+                        <button class="btn btn-primary" id="showGanttChartBtn">Project Timeline</button>
+                    </div>
+
+                    <!-- Load All Projects and Tasks -->
+                    {% for project in projects %}
+                    <div class="mb-3">
+                        <h6 class="fw-bold">{{ project.name }}</h6>
+                        {% for task in project.tasks.all %}
+                            {% if task.priority == 'high' %}
+                                    <div class="gantt-bar mb-2" style="background-color: #dc3545;">
+                                        <span>{{ task.title }} - Due: {{ task.due_date }}</span>
+                                    </div>
+                            {% elif task.priority == 'medium' %}
+                                    <div class="gantt-bar mb-2" style="background-color: #ffc107;">
+                                        <span>{{ task.title }} - Due: {{ task.due_date }}</span>
+                                    </div>
+                            {% else %}
+                                    <div class="gantt-bar mb-2" style="background-color: #28a745;">
+                                        <span>{{ task.title }} - Due: {{ task.due_date }}</span>
+                                    </div>
+                            {% endif %}
+                        {% empty %}
+                            <p>No tasks for this project.</p>
+                        {% endfor %}
+                    </div>
+                    {% empty %}
+                    <p>No projects available.</p>
+                    {% endfor %}
+
+                </div>
+
+                <!-- Gantt Chart Modal -->
+                <div class="modal fade" id="ganttChartModal" tabindex="-1" aria-labelledby="ganttChartModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-xl">
+                        <div class="modal-content">
+                            <div class="modal-header bg-primary text-white">
+                                <h5 class="modal-title" id="ganttChartModalLabel">Project Gantt Chart</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <iframe id="ganttChartFrame" src="" width="100%" height="500px" frameborder="0"></iframe>
                             </div>
                         </div>
-                    {% empty %}
-                        <p>No tasks available for timeline.</p>
-                    {% endfor %}
-                </div>                
+                    </div>
+                </div>
+                            
             </div>
         </div>
     </div>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('showGanttChartBtn').addEventListener('click', function () {
+            const iframe = document.getElementById('ganttChartFrame');
+            iframe.src = "{% url 'gantt_chart_view' %}"; // Ensure this matches your URL name
+            const ganttChartModal = new bootstrap.Modal(document.getElementById('ganttChartModal'));
+            ganttChartModal.show();
+        });
+
+    </script>
+    
 </body>
 </html>

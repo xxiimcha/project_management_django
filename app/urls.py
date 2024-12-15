@@ -6,6 +6,8 @@ urlpatterns = [
     # Dashboard URL
     path('dashboard/', views.dashboard, name='dashboard'),
     
+    path('gantt-chart/', views.gantt_chart_view, name='gantt_chart_view'),
+    
     # Projects Page
     path('projects/', views.projects, name='projects'),
     path('projects/create/', views.projects, name='create_project'),

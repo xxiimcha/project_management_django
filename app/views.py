@@ -32,7 +32,9 @@ class CustomLoginView(LoginView):
             messages.warning(self.request, "Your role is not set. Please contact an admin.")
         
         return response  # Redirect to the default next page or success_url
+    
 # Dashboard View
+
 @login_required
 def dashboard(request):
     # Task counts based on status
@@ -46,24 +48,30 @@ def dashboard(request):
     # Team member progress table
     team_progress = (
         Task.objects.filter(status='done')
-        .values(assignee_name=F('assignee__first_name'), assignee_id=F('assignee__id'))
+        .values('assignee__first_name', 'assignee__last_name')
         .annotate(
-            total_tasks=Count('id'),
-            on_time=Count('id', filter=Q(due_date__gte=F('date_created'))),
-            delayed=Count('id', filter=Q(due_date__lt=F('date_created'))),
+            tasks_completed=Count('id'),
+            tasks_on_time=Count('id', filter=Q(due_date__gte=F('date_created'))),
+            tasks_delayed=Count('id', filter=Q(due_date__lt=F('date_created'))),
         )
     )
 
     # Project timeline Gantt data
     project_tasks = Task.objects.select_related('project').order_by('due_date')
+    projects = Project.objects.prefetch_related('tasks').all()
 
     context = {
         'task_counts': task_counts,
         'team_progress': team_progress,
         'project_tasks': project_tasks,
+        'projects': projects,
     }
 
     return render(request, 'app/dashboard.html', context)
+
+def gantt_chart_view(request):
+    projects = Project.objects.prefetch_related('tasks').all()
+    return render(request, 'app/gantt_chart.html', {'projects': projects})
 
 # Projects View
 @login_required
