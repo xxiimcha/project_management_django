@@ -8,7 +8,8 @@ urlpatterns = [
     
     # Projects Page
     path('projects/', views.projects, name='projects'),
-    path('projects/create/', views.create_project, name='create_project'),
+    path('projects/create/', views.projects, name='create_project'),
+    path('projects/details/<int:project_id>/', views.project_details, name='project_details'),
 
     # Tasks Page
     path('tasks/', views.tasks, name='tasks'),
@@ -17,7 +18,7 @@ urlpatterns = [
     path('members/', views.members, name='members'),
 
     # Profile Page
-    path('profile/', views.profile, name='profile'),
+    path('accounts/profile/', views.profile, name='profile'),
     path('profile/edit/', views.edit_profile, name='edit_profile'),
     path('profile/change-password/', views.change_password, name='change_password'),
     path('profile/delete/', views.delete_account, name='delete_account'),

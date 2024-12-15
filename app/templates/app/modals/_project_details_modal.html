@@ -2,17 +2,58 @@
 <div class="modal fade" id="projectDetailsModal" tabindex="-1" aria-labelledby="projectDetailsLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header">
+            <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title fw-bold" id="projectDetailsLabel">Project Details</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <h5 class="fw-bold">Website Redesign</h5>
-                <p>Redesign company website with modern UI</p>
-                <p><strong>Start Date:</strong> 2024-12-03</p>
-                <p><strong>Deadline:</strong> 2024-12-26</p>
-                <p><strong>Status:</strong> In-Progress</p>
-                <p><strong>Team Members:</strong> John Doe, Alice Smith</p>
+                <p>{{ project.description }}</p>
+                <p><strong>Start Date:</strong> {{ project.start_date }}</p>
+                <p><strong>Deadline:</strong> {{ project.deadline }}</p>
+                <p><strong>Status:</strong> {{ project.status }}</p>
+
+                <!-- Tasks Table -->
+                <h5 class="fw-bold mt-4">Related Tasks</h5>
+                <table class="table table-hover table-bordered mt-2">
+                    <thead class="table-secondary">
+                        <tr>
+                            <th>#</th>
+                            <th>Task Title</th>
+                            <th>Assignee</th>
+                            <th>Due Date</th>
+                            <th>Status</th>
+                            <th>Priority</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Static Data for Tasks -->
+                        <tr>
+                            <td>1</td>
+                            <td>Design Homepage</td>
+                            <td>John Doe</td>
+                            <td>2024-03-15</td>
+                            <td><span class="badge bg-primary">In Progress</span></td>
+                            <td><span class="badge bg-warning">High</span></td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>Implement Backend</td>
+                            <td>Alice Smith</td>
+                            <td>2024-03-20</td>
+                            <td><span class="badge bg-success">Done</span></td>
+                            <td><span class="badge bg-danger">Critical</span></td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td>Fix UI Bugs</td>
+                            <td>Michael Brown</td>
+                            <td>2024-03-25</td>
+                            <td><span class="badge bg-secondary">Not Started</span></td>
+                            <td><span class="badge bg-success">Low</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>

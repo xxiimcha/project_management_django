@@ -50,16 +50,24 @@
 
                 <!-- Projects Cards -->
                 <div class="row">
-                    <!-- Sample Project Card -->
+                    {% for project in all_projects %}
                     <div class="col-md-4 mb-4">
-                        <div class="card project-card p-3">
-                            <h5 class="card-title fw-bold">Website Redesign</h5>
-                            <p class="card-text text-muted">Redesign company website with modern UI</p>
-                            <span class="badge bg-primary mb-2">In-Progress</span>
-                            <p><strong>Members:</strong> John Doe, Alice Smith</p>
-                            <p><strong>Tasks:</strong> 2</p>
+                        <div class="card project-card p-3 shadow-sm">
+                            <h5 class="card-title fw-bold">{{ project.name }}</h5>
+                            <p class="card-text text-muted">{{ project.description }}</p>
+                            <span class="badge bg-primary mb-2">{{ project.status }}</span>
+                            <p><strong>Start Date:</strong> {{ project.start_date }}</p>
+                            <p><strong>Deadline:</strong> {{ project.deadline }}</p>
+                            <p><strong>Created By:</strong> {{ project.created_by.username }}</p>
+            
                             <div class="d-flex justify-content-between">
-                                <a href="#" class="text-primary" data-bs-toggle="modal" data-bs-target="#projectDetailsModal">View Details</a>
+                                <!-- View Details Button -->
+                                <button class="btn btn-sm btn-outline-primary"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#projectDetailsModal"
+                                        data-project-id="{{ project.id }}">
+                                    View Details
+                                </button>                           
                                 <div>
                                     <button class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></button>
                                     <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
@@ -67,6 +75,9 @@
                             </div>
                         </div>
                     </div>
+                    {% empty %}
+                    <p class="text-center text-muted">No projects available.</p>
+                    {% endfor %}
                 </div>
             </div>
 
@@ -79,5 +90,41 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const modal = document.getElementById('projectDetailsModal');
+        
+        modal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget; // Button that triggered the modal
+            const projectId = button.getAttribute('data-project-id'); // Get project ID
+            
+            // URL to fetch project details dynamically
+            const projectUrl = `/projects/details/${projectId}/`;
+
+            // Fetch the project details
+            fetch(projectUrl)
+                .then(response => {
+                    if (!response.ok) throw new Error('Failed to fetch project details.');
+                    return response.text();
+                })
+                .then(data => {
+                    modal.querySelector('.modal-content').innerHTML = data;
+                })
+                .catch(error => {
+                    console.error('Error fetching project details:', error);
+                    modal.querySelector('.modal-content').innerHTML = `
+                        <div class="modal-header">
+                            <h5 class="modal-title fw-bold text-danger">Error</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Failed to load project details. Please try again later.</p>
+                        </div>`;
+                });
+        });
+    });
+
+    </script>
+    
 </body>
 </html>

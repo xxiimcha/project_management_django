@@ -2,7 +2,6 @@ from .models import Project, TeamMember
 
 def create_project(data, user):
     """ Create a new project and assign team members. """
-    # Create the project instance
     project = Project.objects.create(
         name=data['name'],
         description=data['description'],

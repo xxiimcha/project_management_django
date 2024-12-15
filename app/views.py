@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User  # Import User model
 from django.contrib import messages
-from .models import TeamMember, Task, UserProfile
+from .models import TeamMember, Task, UserProfile, Project
 from .project_crud import get_projects, create_project
 from .forms import RegisterForm
 from django.contrib.auth import update_session_auth_hash
@@ -10,6 +10,7 @@ from django.contrib.auth.forms import PasswordChangeForm
 from django.db.models import Count, Q, F
 from django.contrib.auth.views import LoginView
 from django.urls import reverse_lazy
+from django.shortcuts import get_object_or_404
 
 class CustomLoginView(LoginView):
     template_name = 'app/login.html'
@@ -74,11 +75,26 @@ def projects(request):
 
         # Fetch team members for the dropdown
         team_members = TeamMember.objects.all()
-        return render(request, 'app/projects.html', {'team_members': team_members})
+        # Fetch all projects from the database
+        all_projects = get_projects()
+
+        return render(request, 'app/projects.html', {
+            'team_members': team_members,
+            'all_projects': all_projects
+        })
 
     except Exception as e:
         messages.error(request, f"An error occurred: {e}")
         return redirect('dashboard')
+
+@login_required
+def project_details(request, project_id):
+    project = get_object_or_404(Project, id=project_id)
+    tasks = project.tasks.all()  # Assuming related_name="tasks" on Task model
+    return render(request, 'app/modals/_project_details_modal.html', {
+        'project': project,
+        'tasks': tasks
+    })
 
 # Tasks View
 @login_required
