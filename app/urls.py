@@ -8,6 +8,7 @@ urlpatterns = [
     
     # Projects Page
     path('projects/', views.projects, name='projects'),
+    path('projects/create/', views.create_project, name='create_project'),
 
     # Tasks Page
     path('tasks/', views.tasks, name='tasks'),
