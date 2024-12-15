@@ -12,9 +12,10 @@ urlpatterns = [
     path('projects/details/<int:project_id>/', views.project_details, name='project_details'),
 
     # Tasks Page
-    path('tasks/', views.tasks, name='tasks'),
-    path('tasks/create/', views.create_task, name='create_task'),
     
+    path('tasks/', views.tasks_view, name='tasks'),  # Add the tasks page
+    path('tasks/create/', views.create_task, name='create_task'),
+
     # Members Page
     path('members/', views.members, name='members'),
 

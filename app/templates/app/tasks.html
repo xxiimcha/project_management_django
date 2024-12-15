@@ -106,47 +106,95 @@
                 <div class="tab-content">
                     <!-- All Tasks -->
                     <div class="tab-pane fade show active" id="all-tasks">
+                        <!-- Kanban Board -->
                         <div id="kanbanBoard" class="kanban-board">
+                            <!-- Not Started -->
                             <div class="kanban-column" id="not-started" ondrop="drop(event)" ondragover="allowDrop(event)">
                                 <h4>Not Started</h4>
-                                <div class="task-card" id="task1" draggable="true" ondragstart="drag(event)">
-                                    <strong>Task 1:</strong> Setup Development Environment <br>
-                                    <small>Due: 2024-03-15</small><br>
-                                    <small>John Doe</small>
-                                </div>
+                                {% for task in all_tasks %}
+                                    {% if task.status == 'not-started' %}
+                                    <div class="task-card" id="task{{ task.id }}" draggable="true" ondragstart="drag(event)">
+                                        <strong>{{ task.title }}</strong> <br>
+                                        <small>Due: {{ task.due_date }}</small><br>
+                                        <small>{{ task.priority|title }}</small>
+                                    </div>
+                                    {% endif %}
+                                {% endfor %}
                             </div>
+
+                            <!-- In Progress -->
                             <div class="kanban-column" id="in-progress" ondrop="drop(event)" ondragover="allowDrop(event)">
                                 <h4>In Progress</h4>
-                                <div class="task-card" id="task2" draggable="true" ondragstart="drag(event)">
-                                    <strong>Task 2:</strong> Design Homepage <br>
-                                    <small>Due: 2024-03-20</small><br>
-                                    <small>Alice Smith</small>
-                                </div>
+                                {% for task in all_tasks %}
+                                    {% if task.status == 'in-progress' %}
+                                    <div class="task-card" id="task{{ task.id }}" draggable="true" ondragstart="drag(event)">
+                                        <strong>{{ task.title }}</strong> <br>
+                                        <small>Due: {{ task.due_date }}</small><br>
+                                        <small>{{ task.priority|title }}</small>
+                                    </div>
+                                    {% endif %}
+                                {% endfor %}
                             </div>
+
+                            <!-- Done -->
                             <div class="kanban-column" id="done" ondrop="drop(event)" ondragover="allowDrop(event)">
                                 <h4>Done</h4>
+                                {% for task in all_tasks %}
+                                    {% if task.status == 'done' %}
+                                    <div class="task-card" id="task{{ task.id }}" draggable="true" ondragstart="drag(event)">
+                                        <strong>{{ task.title }}</strong> <br>
+                                        <small>Due: {{ task.due_date }}</small><br>
+                                        <small>{{ task.priority|title }}</small>
+                                    </div>
+                                    {% endif %}
+                                {% endfor %}
                             </div>
+
+                            <!-- Urgent -->
                             <div class="kanban-column" id="urgent" ondrop="drop(event)" ondragover="allowDrop(event)">
                                 <h4>Urgent</h4>
+                                {% for task in all_tasks %}
+                                    {% if task.status == 'urgent' %}
+                                    <div class="task-card" id="task{{ task.id }}" draggable="true" ondragstart="drag(event)">
+                                        <strong>{{ task.title }}</strong> <br>
+                                        <small>Due: {{ task.due_date }}</small><br>
+                                        <small>{{ task.priority|title }}</small>
+                                    </div>
+                                    {% endif %}
+                                {% endfor %}
                             </div>
                         </div>
 
+                        <!-- Grid View -->
                         <div id="gridView" class="row d-none">
-                            <div class="col-md-4">
+                            {% for task in all_tasks %}
+                            <div class="col-md-4 mb-3">
                                 <div class="task-card">
-                                    <strong>Task 1:</strong> Setup Development Environment <br>
-                                    <small>Due: 2024-03-15</small><br>
-                                    <small>John Doe</small>
+                                    <strong>{{ task.title }}</strong><br>
+                                    <small>Status: {{ task.status|title }}</small><br>
+                                    <small>Due: {{ task.due_date }}</small><br>
+                                    <small>Priority: {{ task.priority|title }}</small>
                                 </div>
                             </div>
-                            <div class="col-md-4">
-                                <div class="task-card">
-                                    <strong>Task 2:</strong> Design Homepage <br>
-                                    <small>Due: 2024-03-20</small><br>
-                                    <small>Alice Smith</small>
+                            {% endfor %}
+                        </div>
+
+                        <!-- My Tasks Tab -->
+                        <div class="tab-pane fade" id="my-tasks">
+                            <div class="kanban-board">
+                                {% for task in my_tasks %}
+                                <div class="task-card" id="task{{ task.id }}">
+                                    <strong>{{ task.title }}</strong> <br>
+                                    <small>Status: {{ task.status|title }}</small><br>
+                                    <small>Due: {{ task.due_date }}</small><br>
+                                    <small>Priority: {{ task.priority|title }}</small>
                                 </div>
+                                {% empty %}
+                                <p class="text-center text-muted">No tasks assigned to you.</p>
+                                {% endfor %}
                             </div>
                         </div>
+
                     </div>
 
                     <!-- My Tasks -->

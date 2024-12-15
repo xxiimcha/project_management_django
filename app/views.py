@@ -101,6 +101,7 @@ def project_details(request, project_id):
 def tasks(request):
     return render(request, 'app/tasks.html')
 
+@login_required
 def create_task(request):
     if request.method == "POST":
         title = request.POST['title']
@@ -125,6 +126,20 @@ def create_task(request):
         messages.success(request, "Task added successfully!")
         return redirect('projects')  # Redirect to projects page
     
+@login_required
+def tasks_view(request):
+    """ Render the tasks page with filtered tasks. """
+    user_id = request.user.id  # Current logged-in user ID
+
+    # Fetch tasks
+    all_tasks = Task.objects.all()
+    my_tasks = Task.objects.filter(assignee_id=user_id)
+
+    context = {
+        'all_tasks': all_tasks,
+        'my_tasks': my_tasks,
+    }
+    return render(request, 'app/tasks.html', context)
 # Members View
 @login_required
 def members(request):
