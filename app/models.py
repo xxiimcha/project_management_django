@@ -31,3 +31,31 @@ class Project(models.Model):
 
     def __str__(self):
         return f"{self.name} (Status: {self.status})"
+
+# Task Model
+class Task(models.Model):
+    STATUS_CHOICES = [
+        ('not-started', 'Not Started'),
+        ('in-progress', 'In Progress'),
+        ('done', 'Done'),
+        ('urgent', 'Urgent'),
+    ]
+
+    PRIORITY_CHOICES = [
+        ('low', 'Low'),
+        ('medium', 'Medium'),
+        ('high', 'High'),
+    ]
+
+    title = models.CharField(max_length=255)  # Task title
+    description = models.TextField()  # Task description
+    due_date = models.DateField()  # Task deadline
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='not-started')  # Task status
+    priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default='medium')  # Task priority
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="tasks")  # Associated project
+    assignee = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="tasks")  # Assigned user
+    date_created = models.DateTimeField(auto_now_add=True)  # Date the task was created
+    date_updated = models.DateTimeField(auto_now=True)  # Date the task was last updated
+
+    def __str__(self):
+        return f"{self.title} (Status: {self.status}, Priority: {self.priority})"
