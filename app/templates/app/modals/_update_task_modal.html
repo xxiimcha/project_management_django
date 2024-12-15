@@ -1,0 +1,67 @@
+<!-- Update Task Modal -->
+<div class="modal fade" id="updateTaskModal" tabindex="-1" aria-labelledby="updateTaskModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold" id="updateTaskModalLabel">Update Task</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <!-- Update Task Form -->
+            <form id="updateTaskForm" method="post">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <input type="hidden" id="taskId" name="task_id">
+
+                    <!-- Task Title -->
+                    <div class="mb-3">
+                        <label for="taskTitle" class="form-label">Title</label>
+                        <input type="text" class="form-control" id="taskTitle" name="title" required>
+                    </div>
+
+                    <!-- Status -->
+                    <div class="mb-3">
+                        <label for="taskStatus" class="form-label">Status</label>
+                        <select class="form-select" id="taskStatus" name="status" required>
+                            <option value="not-started">Not Started</option>
+                            <option value="in-progress">In Progress</option>
+                            <option value="done">Done</option>
+                            <option value="urgent">Urgent</option>
+                        </select>
+                    </div>
+
+                    <!-- Due Date -->
+                    <div class="mb-3">
+                        <label for="taskDueDate" class="form-label">Due Date</label>
+                        <input type="date" class="form-control" id="taskDueDate" name="due_date" required>
+                    </div>
+
+                    <!-- Priority -->
+                    <div class="mb-3">
+                        <label for="taskPriority" class="form-label">Priority</label>
+                        <select class="form-select" id="taskPriority" name="priority" required>
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+
+                    <!-- Assignee -->
+                    <div class="mb-3">
+                        <label for="taskAssignee" class="form-label">Assignee</label>
+                        <select class="form-select" id="taskAssignee" name="assignee_id" required>
+                            <!-- Dynamically Populated -->
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-success">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

@@ -11,6 +11,8 @@ from django.db.models import Count, Q, F
 from django.contrib.auth.views import LoginView
 from django.urls import reverse_lazy
 from django.shortcuts import get_object_or_404
+from django.http import JsonResponse
+import json
 
 class CustomLoginView(LoginView):
     template_name = 'app/login.html'
@@ -140,6 +142,56 @@ def tasks_view(request):
         'my_tasks': my_tasks,
     }
     return render(request, 'app/tasks.html', context)
+
+def get_task_details(request, task_id):
+    task = Task.objects.get(id=task_id)
+    team_members = User.objects.all()  # Fetch all users to populate the dropdown
+
+    data = {
+        "id": task.id,
+        "title": task.title,
+        "status": task.status,
+        "due_date": task.due_date.strftime('%Y-%m-%d'),
+        "priority": task.priority,
+        "assignee_id": task.assignee.id if task.assignee else None,
+        "team_members": [
+            {"id": member.id, "name": member.get_full_name()} 
+            for member in team_members
+        ]
+    }
+    return JsonResponse(data)
+
+@login_required
+def update_task_status(request, task_id):
+    if request.method == 'POST':
+        try:
+            # Parse the JSON request body
+            data = json.loads(request.body)
+
+            # Retrieve task
+            task = Task.objects.get(id=task_id)
+
+            # Update task fields
+            task.title = data.get('title', task.title)
+            task.status = data.get('status', task.status)
+            task.due_date = data.get('due_date', task.due_date)
+            task.priority = data.get('priority', task.priority)
+
+            # Update assignee
+            assignee_id = data.get('assignee_id')
+            if assignee_id:
+                task.assignee_id = assignee_id
+
+            task.save()
+
+            return JsonResponse({'success': True, 'status': task.status})
+        except Task.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Task not found'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
 # Members View
 @login_required
 def members(request):
