@@ -20,6 +20,9 @@ def tasks(request):
 # Members View
 @login_required
 def members(request):
+    if request.method == 'POST':
+        # Logic to add new members can be implemented here
+        pass
     return render(request, 'app/members.html')
 
 # Profile View

@@ -1,0 +1,14 @@
+<div class="d-flex justify-content-between align-items-center p-3 bg-white border-bottom">
+    <div>
+        <h4 class="mb-0">Good Afternoon, {{ user.username|default:"User" }}.</h4>
+        <small class="text-muted">We hope you have an amazing day!</small>
+    </div>
+    <div>
+        <a href="#" class="position-relative">
+            <i class="bi bi-bell fs-4 text-dark"></i>
+            <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle">
+                <span class="visually-hidden">New alerts</span>
+            </span>
+        </a>
+    </div>
+</div>
