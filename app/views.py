@@ -2,16 +2,45 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User  # Import User model
 from django.contrib import messages
-from .models import TeamMember
+from .models import TeamMember, Task
 from .project_crud import get_projects, create_project
 from .forms import RegisterForm
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.forms import PasswordChangeForm
+from django.db.models import Count, Q, F
 
 # Dashboard View
 @login_required
 def dashboard(request):
-    return render(request, 'app/dashboard.html')
+    # Task counts based on status
+    task_counts = {
+        'not_started': Task.objects.filter(status='not-started').count(),
+        'in_progress': Task.objects.filter(status='in-progress').count(),
+        'done': Task.objects.filter(status='done').count(),
+        'urgent': Task.objects.filter(status='urgent').count(),
+    }
+
+    # Team member progress table
+    team_progress = (
+        Task.objects.filter(status='done')
+        .values(assignee_name=F('assignee__first_name'), assignee_id=F('assignee__id'))
+        .annotate(
+            total_tasks=Count('id'),
+            on_time=Count('id', filter=Q(due_date__gte=F('date_created'))),
+            delayed=Count('id', filter=Q(due_date__lt=F('date_created'))),
+        )
+    )
+
+    # Project timeline Gantt data
+    project_tasks = Task.objects.select_related('project').order_by('due_date')
+
+    context = {
+        'task_counts': task_counts,
+        'team_progress': team_progress,
+        'project_tasks': project_tasks,
+    }
+
+    return render(request, 'app/dashboard.html', context)
 
 # Projects View
 @login_required
