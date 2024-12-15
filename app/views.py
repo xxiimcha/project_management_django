@@ -5,6 +5,8 @@ from django.contrib import messages
 from .models import TeamMember
 from .project_crud import get_projects, create_project
 from .forms import RegisterForm
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.forms import PasswordChangeForm
 
 # Dashboard View
 @login_required
@@ -81,10 +83,43 @@ def members(request):
         return redirect('dashboard')
 
 # Profile View
-@login_required
 def profile(request):
     return render(request, 'app/profile.html')
 
+@login_required
+def edit_profile(request):
+    if request.method == "POST":
+        user = request.user
+        user.first_name = request.POST['first_name']
+        user.last_name = request.POST['last_name']
+        user.email = request.POST['email']
+        user.save()
+        messages.success(request, "Profile updated successfully!")
+        return redirect('profile')
+
+@login_required
+def change_password(request):
+    if request.method == "POST":
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)  # Keep the user logged in
+            messages.success(request, "Password changed successfully!")
+            return redirect('profile')
+        else:
+            messages.error(request, "Please correct the errors below.")
+    else:
+        form = PasswordChangeForm(request.user)
+    return render(request, 'app/profile.html', {'form': form})
+
+@login_required
+def delete_account(request):
+    if request.method == "POST":
+        user = request.user
+        user.delete()
+        messages.success(request, "Your account has been deleted.")
+        return redirect('login')
+    
 # Register View
 def register(request):
     if request.method == 'POST':
