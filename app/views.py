@@ -101,6 +101,30 @@ def project_details(request, project_id):
 def tasks(request):
     return render(request, 'app/tasks.html')
 
+def create_task(request):
+    if request.method == "POST":
+        title = request.POST['title']
+        description = request.POST['description']
+        due_date = request.POST['due_date']
+        priority = request.POST['priority']
+        project_id = request.POST['project_id']
+        assignee_id = request.POST.get('assignee_id')
+
+        # Create Task
+        project = Project.objects.get(id=project_id)
+        assignee = User.objects.get(id=assignee_id) if assignee_id else None
+
+        Task.objects.create(
+            title=title,
+            description=description,
+            due_date=due_date,
+            priority=priority,
+            project=project,
+            assignee=assignee
+        )
+        messages.success(request, "Task added successfully!")
+        return redirect('projects')  # Redirect to projects page
+    
 # Members View
 @login_required
 def members(request):

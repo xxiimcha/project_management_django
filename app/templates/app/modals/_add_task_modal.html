@@ -1,39 +1,51 @@
-<!-- Add Task Modal -->
+<!-- app/modals/_add_task_modal.html -->
 <div class="modal fade" id="addTaskModal" tabindex="-1" aria-labelledby="addTaskLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header">
+            <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title fw-bold" id="addTaskLabel">Add New Task</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form method="POST" action="{% url 'add_task' %}">
+                <form method="POST" action="{% url 'create_task' %}">
                     {% csrf_token %}
-                    <!-- Task Name -->
                     <div class="mb-3">
-                        <label for="title" class="form-label fw-bold">Task Name</label>
-                        <input type="text" class="form-control" id="title" name="title" required>
+                        <label for="task-title" class="form-label">Task Title</label>
+                        <input type="text" class="form-control" id="task-title" name="title" required>
                     </div>
-
-                    <!-- Project -->
                     <div class="mb-3">
-                        <label for="project" class="form-label fw-bold">Project</label>
-                        <select class="form-select" id="project" name="project" required>
-                            {% for project in projects %}
+                        <label for="task-description" class="form-label">Description</label>
+                        <textarea class="form-control" id="task-description" name="description" rows="3" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="task-due-date" class="form-label">Due Date</label>
+                        <input type="date" class="form-control" id="task-due-date" name="due_date" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="task-priority" class="form-label">Priority</label>
+                        <select class="form-select" id="task-priority" name="priority" required>
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="task-project" class="form-label">Select Project</label>
+                        <select class="form-select" id="task-project" name="project_id" required>
+                            {% for project in all_projects %}
                                 <option value="{{ project.id }}">{{ project.name }}</option>
                             {% endfor %}
                         </select>
                     </div>
-
-                    <!-- Description -->
                     <div class="mb-3">
-                        <label for="description" class="form-label fw-bold">Description</label>
-                        <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
+                        <label for="task-assignee" class="form-label">Assignee</label>
+                        <select class="form-select" id="task-assignee" name="assignee_id">
+                            {% for member in team_members %}
+                                <option value="{{ member.user.id }}">{{ member.user.get_full_name }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
-
-                    <!-- Submit Button -->
                     <div class="text-end">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                         <button type="submit" class="btn btn-primary">Add Task</button>
                     </div>
                 </form>
