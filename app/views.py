@@ -448,23 +448,21 @@ def register(request):
         form = RegisterForm()
     return render(request, 'app/register.html', {'form': form})
 
-
-# View to display all notifications
+# Fetch notifications for team members only
 @login_required
 def notifications_view(request):
     """
-    Render a page to view all notifications for the logged-in user.
+    Display all notifications for team members.
     """
-    notifications = Notification.objects.filter(user=request.user).order_by('-created_at')
-    return render(request, 'app/notifications.html', {'notifications': notifications})
+    if request.user.user_profile.role == "team_member":
+        notifications = Notification.objects.filter(user=request.user).order_by('-created_at')
+        return render(request, 'app/notifications.html', {'notifications': notifications})
+    return JsonResponse({"error": "Access denied."}, status=403)
 
 
-# View to mark a notification as read
+# Mark a specific notification as read
 @login_required
 def mark_notification_read(request, notification_id):
-    """
-    Mark a specific notification as read.
-    """
     if request.method == "POST":
         notification = get_object_or_404(Notification, id=notification_id, user=request.user)
         notification.is_read = True
@@ -473,24 +471,27 @@ def mark_notification_read(request, notification_id):
     return JsonResponse({"error": "Invalid request method"}, status=400)
 
 
-# View to mark all notifications as read
+# Mark all notifications as read
 @login_required
 def mark_all_notifications_read(request):
-    """
-    Mark all notifications for the current user as read.
-    """
     if request.method == "POST":
-        notifications = Notification.objects.filter(user=request.user, is_read=False)
-        notifications.update(is_read=True)
+        Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
         return JsonResponse({"message": "All notifications marked as read."})
     return JsonResponse({"error": "Invalid request method"}, status=400)
 
 
-# API View to fetch notifications (AJAX)
 @login_required
 def fetch_notifications(request):
     """
-    Return JSON response of unread notifications for AJAX.
+    Return JSON response of unread notifications for team members via AJAX.
     """
-    notifications = Notification.objects.filter(user=request.user, is_read=False).values('id', 'message', 'created_at')
-    return JsonResponse(list(notifications), safe=False)
+    try:
+        if request.user.profile.role == "team_member":  # Access via 'profile' related_name
+            notifications = Notification.objects.filter(user=request.user, is_read=False).values(
+                'id', 'message', 'created_at'
+            )
+            return JsonResponse(list(notifications), safe=False)
+        else:
+            return JsonResponse({"error": "Access denied. Only team members can view notifications."}, status=403)
+    except UserProfile.DoesNotExist:
+        return JsonResponse({"error": "UserProfile does not exist for this user."}, status=500)
