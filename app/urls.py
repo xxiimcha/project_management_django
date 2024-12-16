@@ -39,4 +39,10 @@ urlpatterns = [
     path('', views.CustomLoginView.as_view(), name='login'),
     path('login/', views.CustomLoginView.as_view(), name='login'),
     path('register/', views.register, name='register'),
+
+    path('notifications/', views.notifications_view, name='notifications'),
+    path('notifications/read/<int:notification_id>/', views.mark_notification_read, name='mark_notification_read'),
+    path('notifications/read-all/', views.mark_all_notifications_read, name='mark_all_notifications_read'),
+    path('notifications/fetch/', views.fetch_notifications, name='fetch_notifications'),
+
 ]

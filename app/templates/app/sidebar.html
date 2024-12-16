@@ -12,19 +12,23 @@
                 <i class="bi bi-house me-2"></i> Dashboard
             </a>
         </li>
-        <li class="nav-item mb-2">
-            <a href="{% url 'projects' %}" class="nav-link {% if request.path == '/projects/' %}active bg-primary text-white{% else %}text-dark{% endif %}">
-                <i class="bi bi-kanban me-2"></i> Projects
-            </a>
-        </li>
+
+        {% if request.session.user_role == 'project_manager' %}
+            <li class="nav-item mb-2">
+                <a href="{% url 'projects' %}" class="nav-link {% if request.path == '/projects/' %}active bg-primary text-white{% else %}text-dark{% endif %}">
+                    <i class="bi bi-kanban me-2"></i> Projects
+                </a>
+            </li>
+            <li class="nav-item mb-2">
+                <a href="{% url 'members' %}" class="nav-link {% if request.path == '/members/' %}active bg-primary text-white{% else %}text-dark{% endif %}">
+                    <i class="bi bi-people me-2"></i> Members
+                </a>
+            </li>
+        {% endif %}
+
         <li class="nav-item mb-2">
             <a href="{% url 'tasks' %}" class="nav-link {% if request.path == '/tasks/' %}active bg-primary text-white{% else %}text-dark{% endif %}">
                 <i class="bi bi-check-circle me-2"></i> Tasks
-            </a>
-        </li>
-        <li class="nav-item mb-2">
-            <a href="{% url 'members' %}" class="nav-link {% if request.path == '/members/' %}active bg-primary text-white{% else %}text-dark{% endif %}">
-                <i class="bi bi-people me-2"></i> Members
             </a>
         </li>
         <li class="nav-item mb-2">

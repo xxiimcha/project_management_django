@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils.timezone import now
 
 class UserProfile(models.Model):
     ROLE_CHOICES = [
@@ -71,3 +72,13 @@ class Task(models.Model):
 
     def __str__(self):
         return f"{self.title} (Status: {self.status}, Priority: {self.priority})"
+    
+
+class Notification(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    message = models.CharField(max_length=255)
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(default=now)
+
+    def __str__(self):
+        return f"Notification for {self.user.username} - {self.message}"

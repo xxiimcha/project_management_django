@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User  # Import User model
 from django.contrib import messages
-from .models import TeamMember, Task, UserProfile, Project
+from .models import TeamMember, Task, UserProfile, Project, Notification
 from .project_crud import get_projects, create_project
 from .forms import RegisterForm
 from django.contrib.auth import update_session_auth_hash
@@ -200,6 +200,8 @@ def project_details(request, project_id):
 def tasks(request):
     return render(request, 'app/tasks.html')
 
+from .models import Notification  # Import Notification model
+
 @login_required
 def create_task(request):
     if request.method == "POST":
@@ -216,16 +218,27 @@ def create_task(request):
             assignee = User.objects.get(id=assignee_id) if assignee_id else None
 
             # Create Task with created_by set to the current user
-            Task.objects.create(
+            task = Task.objects.create(
                 title=title,
                 description=description,
                 due_date=due_date,
                 priority=priority,
                 project=project,
                 assignee=assignee,
-                created_by=request.user  # Set the creator to the logged-in user
+                created_by=request.user
             )
-            messages.success(request, "Task added successfully!")
+
+            # Send notification to the assignee
+            if assignee:
+                Notification.objects.create(
+                    user=assignee,
+                    message=f"You have been assigned a new task: '{task.title}' in project '{project.name}'."
+                )
+                messages.success(request, f"Task added and notification sent to {assignee.get_full_name()}!")
+
+            else:
+                messages.success(request, "Task added successfully!")
+
             return redirect('projects')  # Redirect to projects page
 
         except Project.DoesNotExist:
@@ -237,7 +250,6 @@ def create_task(request):
 
     # If GET request or error, reload the form
     return render(request, 'app/tasks.html')
-
     
 @login_required
 def tasks_view(request):
@@ -306,6 +318,8 @@ def update_task_status(request, task_id):
     return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
 # Members View
+from .models import TeamMember, UserProfile  # Ensure UserProfile is imported
+
 @login_required
 def members(request):
     try:
@@ -334,6 +348,12 @@ def members(request):
                     last_name=last_name
                 )
 
+                # Add role as 'team_member' in UserProfile table
+                UserProfile.objects.create(
+                    user=new_user,
+                    role="team_member"
+                )
+
                 # Create team member
                 TeamMember.objects.create(
                     user=new_user,
@@ -346,6 +366,10 @@ def members(request):
         # Fetch all team members
         team_members = TeamMember.objects.filter(added_by_id=request.user)
         return render(request, 'app/members.html', {'team_members': team_members})
+
+    except Exception as e:
+        messages.error(request, f"An error occurred: {e}")
+        return redirect('dashboard')
 
     except Exception as e:
         messages.error(request, f"An error occurred: {e}")
@@ -423,3 +447,50 @@ def register(request):
     else:
         form = RegisterForm()
     return render(request, 'app/register.html', {'form': form})
+
+
+# View to display all notifications
+@login_required
+def notifications_view(request):
+    """
+    Render a page to view all notifications for the logged-in user.
+    """
+    notifications = Notification.objects.filter(user=request.user).order_by('-created_at')
+    return render(request, 'app/notifications.html', {'notifications': notifications})
+
+
+# View to mark a notification as read
+@login_required
+def mark_notification_read(request, notification_id):
+    """
+    Mark a specific notification as read.
+    """
+    if request.method == "POST":
+        notification = get_object_or_404(Notification, id=notification_id, user=request.user)
+        notification.is_read = True
+        notification.save()
+        return JsonResponse({"message": "Notification marked as read."})
+    return JsonResponse({"error": "Invalid request method"}, status=400)
+
+
+# View to mark all notifications as read
+@login_required
+def mark_all_notifications_read(request):
+    """
+    Mark all notifications for the current user as read.
+    """
+    if request.method == "POST":
+        notifications = Notification.objects.filter(user=request.user, is_read=False)
+        notifications.update(is_read=True)
+        return JsonResponse({"message": "All notifications marked as read."})
+    return JsonResponse({"error": "Invalid request method"}, status=400)
+
+
+# API View to fetch notifications (AJAX)
+@login_required
+def fetch_notifications(request):
+    """
+    Return JSON response of unread notifications for AJAX.
+    """
+    notifications = Notification.objects.filter(user=request.user, is_read=False).values('id', 'message', 'created_at')
+    return JsonResponse(list(notifications), safe=False)
