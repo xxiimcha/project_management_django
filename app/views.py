@@ -13,6 +13,8 @@ from django.urls import reverse_lazy
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 import json
+from django.utils.timezone import now
+
 
 class CustomLoginView(LoginView):
     template_name = 'app/login.html'

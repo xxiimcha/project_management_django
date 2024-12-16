@@ -1,7 +1,14 @@
 <div class="d-flex justify-content-between align-items-center p-3 bg-white border-bottom">
     <div>
-        <h4 class="mb-0">Good Afternoon, {{ user.username|default:"User" }}.</h4>
-        <small class="text-muted">We hope you have an amazing day!</small>
+        <h4 class="mb-0">
+            {% if current_time.hour < 12 %}
+                Good Morning, {{ user.username|default:"User" }}.
+            {% elif current_time.hour < 18 %}
+                Good Afternoon, {{ user.username|default:"User" }}.
+            {% else %}
+                Good Evening, {{ user.username|default:"User" }}.
+            {% endif %}
+        </h4>
     </div>
     <div>
         <a href="#" class="position-relative">

@@ -65,6 +65,17 @@
 
             <!-- Page Content -->
             <div class="container mt-4">
+                
+                {% if messages %}
+                <div class="container">
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
                 <!-- Tabs -->
                 <ul class="nav nav-tabs mb-3" id="taskTabs">
                     <li class="nav-item">
@@ -131,7 +142,7 @@
                                     <div class="task-card" id="task{{ task.id }}" draggable="true" ondragstart="drag(event)">
                                         <strong>{{ task.title }}</strong> <br>
                                         <small>Due: {{ task.due_date }}</small><br>
-                                        <small>{{ task.priority|title }}</small>
+                                        <small>Priority: {{ task.priority|title }}</small><br>
                                         <small>Assignee: {{ task.assignee.get_full_name|default:'Unassigned' }}</small>
                                     </div>
                                     {% endif %}
@@ -146,7 +157,7 @@
                                     <div class="task-card" id="task{{ task.id }}" draggable="true" ondragstart="drag(event)">
                                         <strong>{{ task.title }}</strong> <br>
                                         <small>Due: {{ task.due_date }}</small><br>
-                                        <small>{{ task.priority|title }}</small>
+                                        <small>Priority: {{ task.priority|title }}</small><br>
                                         <small>Assignee: {{ task.assignee.get_full_name|default:'Unassigned' }}</small>
                                     </div>
                                     {% endif %}
@@ -161,7 +172,7 @@
                                     <div class="task-card" id="task{{ task.id }}" draggable="true" ondragstart="drag(event)">
                                         <strong>{{ task.title }}</strong> <br>
                                         <small>Due: {{ task.due_date }}</small><br>
-                                        <small>{{ task.priority|title }}</small><br>
+                                        <small>Priority: {{ task.priority|title }}</small><br>
                                         <small>Assignee: {{ task.assignee.get_full_name|default:'Unassigned' }}</small>
                                     </div>
                                     {% endif %}
