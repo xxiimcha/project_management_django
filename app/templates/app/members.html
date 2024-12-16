@@ -97,8 +97,11 @@
                                 <td>{{ member.user.get_full_name }}</td>
                                 <td>{{ member.user.email }}</td>
                                 <td>
-                                    <button class="btn btn-sm btn-outline-warning">Edit</button>
-                                    <button class="btn btn-sm btn-outline-danger">Delete</button>
+                                    <button class="btn btn-sm btn-outline-danger delete-btn"
+                                            data-member-id="{{ member.id }}"
+                                            data-member-name="{{ member.user.get_full_name }}">
+                                        <i class="bi bi-trash"></i> Delete
+                                    </button>
                                 </td>
                             </tr>
                             {% empty %}
@@ -106,8 +109,7 @@
                                 <td colspan="4" class="text-center">No members added yet.</td>
                             </tr>
                             {% endfor %}
-                        </tbody>
-                        
+                        </tbody>                        
                     </table>
                 </div>
             </div>
@@ -149,5 +151,43 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const deleteButtons = document.querySelectorAll(".delete-btn");
+    
+        deleteButtons.forEach(button => {
+            button.addEventListener("click", function () {
+                const memberId = this.getAttribute("data-member-id");
+                const memberName = this.getAttribute("data-member-name");
+    
+                // Show confirmation dialog
+                const confirmDelete = confirm(`Are you sure you want to delete ${memberName}?`);
+                
+                if (confirmDelete) {
+                    // Send a POST request to delete the member
+                    fetch(`/members/delete/${memberId}/`, {
+                        method: "POST",
+                        headers: {
+                            "X-CSRFToken": "{{ csrf_token }}",  // Ensure CSRF token is included
+                            "Content-Type": "application/json",
+                        }
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            alert(`${memberName} has been deleted successfully.`);
+                            location.reload();  // Reload the page to reflect changes
+                        } else {
+                            alert("Failed to delete the member. Please try again.");
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Error:", error);
+                        alert("An error occurred. Please try again.");
+                    });
+                }
+            });
+        });
+    });
+    </script>        
 </body>
 </html>

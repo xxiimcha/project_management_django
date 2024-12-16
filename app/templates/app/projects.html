@@ -33,17 +33,6 @@
 
             <div class="container mt-4 content-container">
                 <!-- Page Header -->
-                 
-                {% if messages %}
-                <div class="container">
-                    {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                    {% endfor %}
-                </div>
-                {% endif %}
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h2 class="fw-bold">Projects</h2>
                     <div class="d-flex gap-2">
@@ -89,10 +78,28 @@
                 </div>
             </div>
 
-            <!-- Include Modals -->
+            <!-- Modals -->
             {% include 'app/modals/_new_project_modal.html' %}
-            {% include 'app/modals/_project_details_modal.html' %}
             {% include 'app/modals/_add_task_modal.html' %}
+
+            <!-- Project Details Modal -->
+            <div class="modal fade" id="projectDetailsModal" tabindex="-1" aria-labelledby="projectDetailsLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header bg-primary text-white">
+                            <h5 class="modal-title fw-bold" id="projectDetailsLabel">Project Details</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <!-- Dynamic content will be loaded here -->
+                            <div class="text-center text-muted">Loading project details...</div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
             
         </div>
     </div>
@@ -106,34 +113,31 @@
         modal.addEventListener('show.bs.modal', function (event) {
             const button = event.relatedTarget; // Button that triggered the modal
             const projectId = button.getAttribute('data-project-id'); // Get project ID
+            const modalBody = modal.querySelector('.modal-body');
             
             // URL to fetch project details dynamically
             const projectUrl = `/projects/details/${projectId}/`;
 
+            // Show loading state
+            modalBody.innerHTML = '<div class="text-center text-muted">Loading project details...</div>';
+
             // Fetch the project details
-            fetch(projectUrl)
-                .then(response => {
-                    if (!response.ok) throw new Error('Failed to fetch project details.');
-                    return response.text();
-                })
-                .then(data => {
-                    modal.querySelector('.modal-content').innerHTML = data;
-                })
-                .catch(error => {
-                    console.error('Error fetching project details:', error);
-                    modal.querySelector('.modal-content').innerHTML = `
-                        <div class="modal-header">
-                            <h5 class="modal-title fw-bold text-danger">Error</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <p>Failed to load project details. Please try again later.</p>
-                        </div>`;
-                });
+            fetch(projectUrl, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Failed to fetch project details.');
+                return response.text();
+            })
+            .then(data => {
+                modalBody.innerHTML = data; // Insert fetched content into modal body
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                modalBody.innerHTML = `<div class="text-danger text-center">Failed to load project details. Please try again later.</div>`;
+            });
         });
     });
-
     </script>
-    
 </body>
 </html>

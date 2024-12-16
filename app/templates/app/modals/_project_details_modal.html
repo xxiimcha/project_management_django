@@ -1,63 +1,37 @@
-<!-- Project Details Modal -->
-<div class="modal fade" id="projectDetailsModal" tabindex="-1" aria-labelledby="projectDetailsLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title fw-bold" id="projectDetailsLabel">Project Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p>{{ project.description }}</p>
-                <p><strong>Start Date:</strong> {{ project.start_date }}</p>
-                <p><strong>Deadline:</strong> {{ project.deadline }}</p>
-                <p><strong>Status:</strong> {{ project.status }}</p>
+<div>
+    <p><strong>Description:</strong> {{ project.description }}</p>
+    <p><strong>Start Date:</strong> {{ project.start_date }}</p>
+    <p><strong>Deadline:</strong> {{ project.deadline }}</p>
+    <p><strong>Status:</strong> {{ project.status }}</p>
 
-                <!-- Tasks Table -->
-                <h5 class="fw-bold mt-4">Related Tasks</h5>
-                <table class="table table-hover table-bordered mt-2">
-                    <thead class="table-secondary">
-                        <tr>
-                            <th>#</th>
-                            <th>Task Title</th>
-                            <th>Assignee</th>
-                            <th>Due Date</th>
-                            <th>Status</th>
-                            <th>Priority</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Static Data for Tasks -->
-                        <tr>
-                            <td>1</td>
-                            <td>Design Homepage</td>
-                            <td>John Doe</td>
-                            <td>2024-03-15</td>
-                            <td><span class="badge bg-primary">In Progress</span></td>
-                            <td><span class="badge bg-warning">High</span></td>
-                        </tr>
-                        <tr>
-                            <td>2</td>
-                            <td>Implement Backend</td>
-                            <td>Alice Smith</td>
-                            <td>2024-03-20</td>
-                            <td><span class="badge bg-success">Done</span></td>
-                            <td><span class="badge bg-danger">Critical</span></td>
-                        </tr>
-                        <tr>
-                            <td>3</td>
-                            <td>Fix UI Bugs</td>
-                            <td>Michael Brown</td>
-                            <td>2024-03-25</td>
-                            <td><span class="badge bg-secondary">Not Started</span></td>
-                            <td><span class="badge bg-success">Low</span></td>
-                        </tr>
-                    </tbody>
-                </table>
-
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
+    <!-- Tasks Table -->
+    <h5 class="fw-bold mt-4">Related Tasks</h5>
+    <table class="table table-hover table-bordered mt-2">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Task Title</th>
+                <th>Assignee</th>
+                <th>Due Date</th>
+                <th>Status</th>
+                <th>Priority</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for task in tasks %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ task.title }}</td>
+                <td>{{ task.assignee.get_full_name|default:"Unassigned" }}</td>
+                <td>{{ task.due_date }}</td>
+                <td><span class="badge bg-info">{{ task.status }}</span></td>
+                <td><span class="badge bg-warning">{{ task.priority }}</span></td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="text-center text-muted">No tasks available.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>

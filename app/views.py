@@ -14,7 +14,7 @@ from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 import json
 from django.utils.timezone import now
-
+from django.http import JsonResponse, HttpResponseBadRequest
 
 class CustomLoginView(LoginView):
     template_name = 'app/login.html'
@@ -114,13 +114,30 @@ def projects(request):
 
 @login_required
 def project_details(request, project_id):
-    project = get_object_or_404(Project, id=project_id)
-    tasks = project.tasks.all()  # Assuming related_name="tasks" on Task model
-    return render(request, 'app/modals/_project_details_modal.html', {
-        'project': project,
-        'tasks': tasks
-    })
+    """
+    View to return project details along with its tasks.
+    This will render content dynamically for the modal via AJAX.
+    """
+    # Check if the request is AJAX
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        try:
+            # Fetch the project for the logged-in user
+            project = get_object_or_404(Project, id=project_id, created_by=request.user)
+            tasks = project.tasks.all()  # Assuming related_name="tasks" on Task model
 
+            # Render the partial HTML for modal content
+            return render(request, 'app/modals/_project_details_modal.html', {
+                'project': project,
+                'tasks': tasks
+            })
+        except Exception as e:
+            # Return a JSON error response in case of any exceptions
+            return JsonResponse({'error': str(e)}, status=500)
+    else:
+        # If not an AJAX request, return a bad request response
+        return HttpResponseBadRequest("Invalid request")
+
+    
 # Tasks View
 @login_required
 def tasks(request):
@@ -276,6 +293,22 @@ def members(request):
     except Exception as e:
         messages.error(request, f"An error occurred: {e}")
         return redirect('dashboard')
+
+
+@login_required
+def delete_member(request, member_id):
+    """
+    Deletes a team member by ID.
+    """
+    if request.method == "POST":
+        try:
+            member = get_object_or_404(TeamMember, id=member_id, added_by=request.user)
+            member_name = member.user.get_full_name()
+            member.delete()
+            return JsonResponse({"success": f"{member_name} has been deleted."})
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+    return JsonResponse({"error": "Invalid request"}, status=400)
 
 # Profile View
 def profile(request):

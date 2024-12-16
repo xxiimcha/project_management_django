@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from .views import project_details
 from django.contrib.auth import views as auth_views
 
 urlpatterns = [
@@ -11,7 +12,7 @@ urlpatterns = [
     # Projects Page
     path('projects/', views.projects, name='projects'),
     path('projects/create/', views.projects, name='create_project'),
-    path('projects/details/<int:project_id>/', views.project_details, name='project_details'),
+    path('projects/details/<int:project_id>/', project_details, name='project_details'),
 
     # Tasks Page
     path('tasks/', views.tasks_view, name='tasks'),  # Add the tasks page
@@ -21,6 +22,7 @@ urlpatterns = [
 
     # Members Page
     path('members/', views.members, name='members'),
+    path('members/delete/<int:member_id>/', views.delete_member, name="delete_member"),
 
     # Profile Page
     path('accounts/profile/', views.profile, name='profile'),
