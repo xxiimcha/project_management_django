@@ -65,6 +65,7 @@ class Task(models.Model):
     priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default='medium')  # Task priority
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="tasks")  # Associated project
     assignee = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="tasks")  # Assigned user
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="created_tasks")  # Creator user ID
     date_created = models.DateTimeField(auto_now_add=True)  # Date the task was created
     date_updated = models.DateTimeField(auto_now=True)  # Date the task was last updated
 

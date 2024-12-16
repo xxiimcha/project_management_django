@@ -20,34 +20,45 @@ class CustomLoginView(LoginView):
     def form_valid(self, form):
         # Call the parent method to log the user in
         response = super().form_valid(form)
-        
-        # Fetch the user's role
+
+        # Fetch the logged-in user
         user = self.request.user
-        if hasattr(user, 'userprofile'):
-            role = user.userprofile.role
-            self.request.session['user_role'] = role  # Store the role in session
-            messages.success(self.request, f"Welcome back, {user.username}! Role: {role}")
-            return reverse_lazy('dashboard')  # Redirect to 'dashboard' URL name
-        else:
-            messages.warning(self.request, "Your role is not set. Please contact an admin.")
+        print(f"User '{user.username}' (ID: {user.id}) logged in.")  # Log username and user ID
+
+        # Check if the user has a UserProfile, else create one
+        user_profile, created = UserProfile.objects.get_or_create(user=user, defaults={'role': 'project_manager'})
         
-        return response  # Redirect to the default next page or success_url
+        # Log the role status
+        if created:
+            print(f"UserProfile created for '{user.username}' (ID: {user.id}) with default role 'project_manager'.")
+        else:
+            print(f"UserProfile already exists for '{user.username}' (ID: {user.id}). Role: {user_profile.role}")
+        
+        # Store the role in the session
+        self.request.session['user_role'] = user_profile.role
+        messages.success(self.request, f"Welcome back, {user.username}! Role: {user_profile.role}")
+
+        # Redirect to the dashboard
+        print(f"Redirecting '{user.username}' (ID: {user.id}) to dashboard.")
+        return response
     
 # Dashboard View
 
 @login_required
 def dashboard(request):
-    # Task counts based on status
+    user = request.user
+
+    # Task counts based on status for tasks created by the logged-in user
     task_counts = {
-        'not_started': Task.objects.filter(status='not-started').count(),
-        'in_progress': Task.objects.filter(status='in-progress').count(),
-        'done': Task.objects.filter(status='done').count(),
-        'urgent': Task.objects.filter(status='urgent').count(),
+        'not_started': Task.objects.filter(status='not-started', project__created_by=user).count(),
+        'in_progress': Task.objects.filter(status='in-progress', project__created_by=user).count(),
+        'done': Task.objects.filter(status='done', project__created_by=user).count(),
+        'urgent': Task.objects.filter(status='urgent', project__created_by=user).count(),
     }
 
-    # Team member progress table
+    # Team member progress table for tasks created by the logged-in user
     team_progress = (
-        Task.objects.filter(status='done')
+        Task.objects.filter(status='done', project__created_by=user)
         .values('assignee__first_name', 'assignee__last_name')
         .annotate(
             tasks_completed=Count('id'),
@@ -56,9 +67,9 @@ def dashboard(request):
         )
     )
 
-    # Project timeline Gantt data
-    project_tasks = Task.objects.select_related('project').order_by('due_date')
-    projects = Project.objects.prefetch_related('tasks').all()
+    # Project timeline Gantt data filtered by the logged-in user
+    project_tasks = Task.objects.filter(project__created_by=user).select_related('project').order_by('due_date')
+    projects = Project.objects.prefetch_related('tasks').filter(created_by=user)
 
     context = {
         'task_counts': task_counts,
@@ -68,6 +79,7 @@ def dashboard(request):
     }
 
     return render(request, 'app/dashboard.html', context)
+
 
 def gantt_chart_view(request):
     projects = Project.objects.prefetch_related('tasks').all()
@@ -83,10 +95,11 @@ def projects(request):
             messages.success(request, "Project created successfully!")
             return redirect('projects')
 
-        # Fetch team members for the dropdown
-        team_members = TeamMember.objects.all()
-        # Fetch all projects from the database
-        all_projects = get_projects()
+        # Fetch team members created by the logged-in user
+        team_members = TeamMember.objects.filter(added_by_id=request.user)
+        
+        # Fetch all projects created by the logged-in user
+        all_projects = get_projects().filter(created_by=request.user)
 
         return render(request, 'app/projects.html', {
             'team_members': team_members,
@@ -119,31 +132,47 @@ def create_task(request):
         due_date = request.POST['due_date']
         priority = request.POST['priority']
         project_id = request.POST['project_id']
-        assignee_id = request.POST.get('assignee_id')
+        assignee_id = request.POST.get('assignee_id')  # Optional assignee
 
-        # Create Task
-        project = Project.objects.get(id=project_id)
-        assignee = User.objects.get(id=assignee_id) if assignee_id else None
+        try:
+            # Fetch project and assignee if available
+            project = Project.objects.get(id=project_id)
+            assignee = User.objects.get(id=assignee_id) if assignee_id else None
 
-        Task.objects.create(
-            title=title,
-            description=description,
-            due_date=due_date,
-            priority=priority,
-            project=project,
-            assignee=assignee
-        )
-        messages.success(request, "Task added successfully!")
-        return redirect('projects')  # Redirect to projects page
+            # Create Task with created_by set to the current user
+            Task.objects.create(
+                title=title,
+                description=description,
+                due_date=due_date,
+                priority=priority,
+                project=project,
+                assignee=assignee,
+                created_by=request.user  # Set the creator to the logged-in user
+            )
+            messages.success(request, "Task added successfully!")
+            return redirect('projects')  # Redirect to projects page
+
+        except Project.DoesNotExist:
+            messages.error(request, "Project not found!")
+        except User.DoesNotExist:
+            messages.error(request, "Assignee not found!")
+        except Exception as e:
+            messages.error(request, f"An error occurred: {e}")
+
+    # If GET request or error, reload the form
+    return render(request, 'app/tasks.html')
+
     
 @login_required
 def tasks_view(request):
     """ Render the tasks page with filtered tasks. """
     user_id = request.user.id  # Current logged-in user ID
 
-    # Fetch tasks
-    all_tasks = Task.objects.all()
+    # Fetch tasks assigned to the current user
     my_tasks = Task.objects.filter(assignee_id=user_id)
+    
+    # Optionally, you can filter `all_tasks` to exclude those assigned to the current user
+    all_tasks = Task.objects.exclude(assignee_id=user_id)
 
     context = {
         'all_tasks': all_tasks,
@@ -239,7 +268,7 @@ def members(request):
             return redirect('members')
 
         # Fetch all team members
-        team_members = TeamMember.objects.all()
+        team_members = TeamMember.objects.filter(added_by_id=request.user)
         return render(request, 'app/members.html', {'team_members': team_members})
 
     except Exception as e:
