@@ -15,6 +15,16 @@ from django.http import JsonResponse
 import json
 from django.utils.timezone import now
 from django.http import JsonResponse, HttpResponseBadRequest
+from django.contrib.auth import logout
+
+
+@login_required
+def logout_view(request):
+    """
+    Logs out the user and redirects to the login page.
+    """
+    logout(request)
+    return redirect('login')  # Ensure 'login' is the name of your login URL
 
 class CustomLoginView(LoginView):
     template_name = 'app/login.html'

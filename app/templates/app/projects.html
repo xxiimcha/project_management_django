@@ -194,7 +194,7 @@
             })
             .then(data => {
                 // Populate Edit Modal Fields
-                document.getElementById('edit_project_id').value = data.id; // Correct placement
+                document.getElementById('edit_project_id').value = data.id; // Correct hidden field
                 document.getElementById('edit_name').value = data.name;
                 document.getElementById('edit_description').value = data.description;
                 document.getElementById('edit_start_date').value = data.start_date;
@@ -207,7 +207,6 @@
                 });
 
                 // Show Edit Modal
-                const editModal = new bootstrap.Modal(document.getElementById('editProjectModal'));
                 editModal.show();
             })
             .catch(error => {
@@ -215,7 +214,6 @@
                 alert('Failed to load project data.');
             });
         }
-
 
         // Attach delete functionality
         deleteButtons.forEach(button => {
@@ -231,7 +229,7 @@
         editProjectForm.addEventListener('submit', function (e) {
             e.preventDefault();
             const formData = new FormData(this);
-            const projectId = document.getElementById('editProjectId').value;
+            const projectId = document.getElementById('edit_project_id').value; // Corrected ID reference
 
             fetch(`/projects/edit/${projectId}/`, {
                 method: 'POST',
@@ -243,13 +241,17 @@
                     alert("Project updated successfully!");
                     location.reload();
                 } else {
-                    alert("Failed to update the project.");
+                    response.json().then(data => {
+                        alert("Failed to update the project: " + (data.error || "Unknown error"));
+                    });
                 }
             })
-            .catch(error => console.error('Error updating project:', error));
+            .catch(error => {
+                console.error('Error updating project:', error);
+                alert('An error occurred while updating the project.');
+            });
         });
     });
-
 
     document.addEventListener('DOMContentLoaded', function () {
         const modal = document.getElementById('projectDetailsModal');
