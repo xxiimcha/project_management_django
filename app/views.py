@@ -13,10 +13,15 @@ from django.urls import reverse_lazy
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 import json
+from django.http import HttpResponse
 from django.utils.timezone import now
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.contrib.auth import logout
-
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import Table, TableStyle, Paragraph, Spacer, SimpleDocTemplate
 
 @login_required
 def logout_view(request):
@@ -55,7 +60,6 @@ class CustomLoginView(LoginView):
         return response
     
 # Dashboard View
-
 @login_required
 def dashboard(request):
     user = request.user
@@ -92,6 +96,86 @@ def dashboard(request):
 
     return render(request, 'app/dashboard.html', context)
 
+@login_required
+def generate_report(request):
+    """
+    Generate and download a PDF report with project and task details.
+    """
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="project_report.pdf"'
+
+    # Initialize document
+    doc = SimpleDocTemplate(response, pagesize=letter, rightMargin=40, leftMargin=40, topMargin=40, bottomMargin=30)
+    elements = []
+    styles = getSampleStyleSheet()
+
+    # Title
+    title = Paragraph("<b><font size=18>Project and Task Report</font></b>", styles['Title'])
+    elements.append(title)
+    elements.append(Spacer(1, 20))  # Add some space
+
+    # Task Status Overview Section
+    task_counts = {
+        "Not Started": Task.objects.filter(status='not-started').count(),
+        "In Progress": Task.objects.filter(status='in-progress').count(),
+        "Done": Task.objects.filter(status='done').count(),
+        "Urgent": Task.objects.filter(status='urgent').count(),
+    }
+    task_data = [["<b>Status</b>", "<b>Count</b>"]]
+    for status, count in task_counts.items():
+        task_data.append([status, count])
+
+    task_table = Table(task_data, colWidths=[200, 100])
+    task_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+    ]))
+    elements.append(Paragraph("<b><font size=14>Task Status Overview</font></b>", styles['Heading2']))
+    elements.append(Spacer(1, 10))
+    elements.append(task_table)
+    elements.append(Spacer(1, 20))
+
+    # Projects and Tasks Section
+    elements.append(Paragraph("<b><font size=14>Projects and Tasks</font></b>", styles['Heading2']))
+    elements.append(Spacer(1, 10))
+
+    projects = Project.objects.prefetch_related('tasks').all()
+    for project in projects:
+        # Project Title
+        project_title = Paragraph(f"<b>Project:</b> {project.name}", styles['Heading3'])
+        elements.append(project_title)
+        elements.append(Spacer(1, 5))
+
+        # Task Table for Project
+        task_data = [["<b>Task Title</b>", "<b>Status</b>", "<b>Priority</b>", "<b>Due Date</b>"]]
+        for task in project.tasks.all():
+            task_data.append([task.title, task.status.capitalize(), task.priority.capitalize(), task.due_date.strftime('%Y-%m-%d')])
+
+        if len(task_data) > 1:  # Only render if tasks exist
+            task_table = Table(task_data, colWidths=[180, 80, 80, 100])
+            task_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.lightblue),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.aliceblue),
+                ('GRID', (0, 0), (-1, -1), 1, colors.grey),
+            ]))
+            elements.append(task_table)
+        else:
+            elements.append(Paragraph("<i>No tasks available for this project.</i>", styles['BodyText']))
+
+        elements.append(Spacer(1, 20))
+
+    # Build the document
+    doc.build(elements)
+    return response
 
 def gantt_chart_view(request):
     projects = Project.objects.prefetch_related('tasks').all()

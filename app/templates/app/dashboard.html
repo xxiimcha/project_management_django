@@ -165,7 +165,9 @@
                     {% endfor %}
 
                 </div>
-
+                <a href="{% url 'generate_report' %}" class="btn btn-success">
+                    <i class="bi bi-file-earmark-arrow-down"></i> Generate Report
+                </a>
                 <!-- Gantt Chart Modal -->
                 <div class="modal fade" id="ganttChartModal" tabindex="-1" aria-labelledby="ganttChartModalLabel" aria-hidden="true">
                     <div class="modal-dialog modal-xl">

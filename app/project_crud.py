@@ -1,7 +1,8 @@
-from .models import Project, TeamMember
+from .models import Project, TeamMember, Notification
 
 def create_project(data, user):
     """ Create a new project and assign team members. """
+    # Step 1: Create the project
     project = Project.objects.create(
         name=data['name'],
         description=data['description'],
@@ -11,11 +12,20 @@ def create_project(data, user):
         created_by=user
     )
 
-    # Add team members
+    # Step 2: Add team members and send notifications
     team_members_ids = data.getlist('team_members')  # Expecting team members as a list of IDs
     for member_id in team_members_ids:
-        team_member = TeamMember.objects.get(id=member_id)
-        project.team_members.add(team_member)
+        try:
+            team_member = TeamMember.objects.get(id=member_id)
+            project.team_members.add(team_member)
+
+            # Send notification to the team member
+            Notification.objects.create(
+                user=team_member.user,
+                message=f"You have been added to the project '{project.name}'."
+            )
+        except TeamMember.DoesNotExist:
+            print(f"TeamMember with ID {member_id} does not exist. Skipping.")
 
     project.save()
     return project
