@@ -101,12 +101,156 @@
                 </div>
             </div>
             
+            <!-- Edit Project Modal -->
+            <div class="modal fade" id="editProjectModal" tabindex="-1" aria-labelledby="editProjectLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title fw-bold" id="editProjectLabel">Edit Project</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="editProjectForm" method="POST">
+                                {% csrf_token %}
+                                <input type="hidden" id="edit_project_id" name="project_id">
+                                <div class="mb-3">
+                                    <label for="edit_name" class="form-label fw-bold">Project Name</label>
+                                    <input type="text" class="form-control" id="edit_name" name="name" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="edit_description" class="form-label fw-bold">Description</label>
+                                    <textarea class="form-control" id="edit_description" name="description" rows="3" required></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="edit_start_date" class="form-label fw-bold">Start Date</label>
+                                    <input type="date" class="form-control" id="edit_start_date" name="start_date" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="edit_deadline" class="form-label fw-bold">Deadline</label>
+                                    <input type="date" class="form-control" id="edit_deadline" name="deadline" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="edit_team_members" class="form-label fw-bold">Team Members</label>
+                                    <select class="form-select" id="edit_team_members" name="team_members" multiple>
+                                        {% for member in team_members %}
+                                            <option value="{{ member.id }}">{{ member.user.get_full_name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <small class="text-muted">Hold Ctrl (Windows) or Cmd (Mac) to select multiple members.</small>
+                                </div>
+                                <div class="text-end">
+                                    <button type="submit" class="btn btn-warning">Save Changes</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const deleteButtons = document.querySelectorAll('.btn-outline-danger');
+        const editButtons = document.querySelectorAll('.btn-outline-secondary');
+        const editModal = new bootstrap.Modal(document.getElementById('editProjectModal'));
+        const editProjectForm = document.getElementById('editProjectForm');
+
+        // Function to handle project deletion
+        function handleDelete(button) {
+            const projectId = button.closest('.project-card').querySelector('[data-project-id]').getAttribute('data-project-id');
+            if (confirm("Are you sure you want to delete this project?")) {
+                fetch(`/projects/delete/${projectId}/`, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+                })
+                .then(response => {
+                    if (response.ok) {
+                        alert("Project deleted successfully!");
+                        location.reload();
+                    } else {
+                        alert("Failed to delete the project.");
+                    }
+                })
+                .catch(error => console.error('Error deleting project:', error));
+            }
+        }
+
+        // Function to populate the Edit Modal
+        function handleEdit(button) {
+            const projectCard = button.closest('.project-card');
+            const projectId = projectCard.querySelector('[data-project-id]').getAttribute('data-project-id');
+
+            // Fetch project data dynamically via AJAX
+            fetch(`/projects/edit/${projectId}/`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Failed to fetch project details.');
+                return response.json();
+            })
+            .then(data => {
+                // Populate Edit Modal Fields
+                document.getElementById('edit_project_id').value = data.id; // Correct placement
+                document.getElementById('edit_name').value = data.name;
+                document.getElementById('edit_description').value = data.description;
+                document.getElementById('edit_start_date').value = data.start_date;
+                document.getElementById('edit_deadline').value = data.deadline;
+
+                // Populate team members selection
+                const teamMembersField = document.getElementById('edit_team_members');
+                Array.from(teamMembersField.options).forEach(option => {
+                    option.selected = data.team_members.includes(parseInt(option.value));
+                });
+
+                // Show Edit Modal
+                const editModal = new bootstrap.Modal(document.getElementById('editProjectModal'));
+                editModal.show();
+            })
+            .catch(error => {
+                console.error('Error fetching project details:', error);
+                alert('Failed to load project data.');
+            });
+        }
+
+
+        // Attach delete functionality
+        deleteButtons.forEach(button => {
+            button.addEventListener('click', () => handleDelete(button));
+        });
+
+        // Attach edit functionality
+        editButtons.forEach(button => {
+            button.addEventListener('click', () => handleEdit(button));
+        });
+
+        // Handle Edit Form Submission
+        editProjectForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const projectId = document.getElementById('editProjectId').value;
+
+            fetch(`/projects/edit/${projectId}/`, {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert("Project updated successfully!");
+                    location.reload();
+                } else {
+                    alert("Failed to update the project.");
+                }
+            })
+            .catch(error => console.error('Error updating project:', error));
+        });
+    });
+
+
     document.addEventListener('DOMContentLoaded', function () {
         const modal = document.getElementById('projectDetailsModal');
         

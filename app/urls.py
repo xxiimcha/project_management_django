@@ -13,6 +13,8 @@ urlpatterns = [
     path('projects/', views.projects, name='projects'),
     path('projects/create/', views.projects, name='create_project'),
     path('projects/details/<int:project_id>/', project_details, name='project_details'),
+    path('projects/delete/<int:project_id>/', views.delete_project, name='delete_project'),
+    path('projects/edit/<int:project_id>/', views.edit_project, name='edit_project'),  # Fix here
 
     # Tasks Page
     path('tasks/', views.tasks_view, name='tasks'),  # Add the tasks page

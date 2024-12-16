@@ -112,6 +112,53 @@ def projects(request):
         messages.error(request, f"An error occurred: {e}")
         return redirect('dashboard')
 
+
+@login_required
+def delete_project(request, project_id):
+    if request.method == 'POST':
+        project = get_object_or_404(Project, id=project_id, created_by=request.user)
+        project.delete()
+        return JsonResponse({"success": "Project deleted successfully!"})
+    return JsonResponse({"error": "Invalid request"}, status=400)
+
+
+@login_required
+def edit_project(request, project_id):
+    """
+    View to fetch project details for editing or update project.
+    """
+    if request.method == "GET" and request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        # Fetch project details for AJAX
+        project = get_object_or_404(Project, id=project_id, created_by=request.user)
+        team_members = project.team_members.values_list('id', flat=True)  # Fetch team member IDs
+
+        data = {
+            'id': project.id,
+            'name': project.name,
+            'description': project.description,
+            'start_date': str(project.start_date),
+            'deadline': str(project.deadline),
+            'team_members': list(team_members),
+        }
+        return JsonResponse(data)
+    
+    elif request.method == "POST":
+        # Handle project update
+        project = get_object_or_404(Project, id=project_id, created_by=request.user)
+        project.name = request.POST.get('name')
+        project.description = request.POST.get('description')
+        project.start_date = request.POST.get('start_date')
+        project.deadline = request.POST.get('deadline')
+        team_members = request.POST.getlist('team_members')  # List of selected team members
+
+        # Update team members (assuming ManyToMany relationship)
+        project.team_members.set(team_members)
+        project.save()
+        
+        return JsonResponse({'message': 'Project updated successfully!'})
+
+    return JsonResponse({'error': 'Invalid request method.'}, status=400)
+
 @login_required
 def project_details(request, project_id):
     """
